@@ -1,22 +1,22 @@
-# LLM File Processor
+# LLM Batch Processor (llm-bp)
 
-A CLI tool that processes files using OpenAI's API with configurable concurrency. Perfect for batch processing multiple files with LLM, such as translation, summarization, or code review.
+A high-performance CLI tool that enables batch processing of files with any custom LLM prompt. Built with TypeScript and powered by OpenAI's API, llm-bp makes it easy to apply your prompts to multiple files concurrently.
 
-## Features
+## Key Features
 
-- Process single or multiple files using glob patterns
-- Configurable concurrency for parallel processing
-- Support for both inline prompts and prompt files
-- Progress tracking with content previews
-- Automatic retry on failures
-- Environment-based configuration
+- **Flexible Prompt System**: Use any prompt you want - from inline commands to prompt files
+- **Batch Processing**: Process multiple files at once using glob patterns
+- **Concurrent Execution**: Configure parallel processing to optimize throughput
+- **Smart Progress Tracking**: Monitor processing with content previews
+- **Resilient Processing**: Automatic retries for failed requests
+- **Easy Configuration**: Simple environment-based setup
 
 ## Installation
 
 ### Option 1: Build from Source
 
 1. Clone the repository
-2. Copy `.env.example` to `.env` and fill in your OpenAI API key and other settings:
+2. Copy `.env.example` to `.env` and configure your settings:
    ```
    OPENAI_API_KEY=your-api-key-here
    OPENAI_BASE_URL=https://api.openai.com/v1

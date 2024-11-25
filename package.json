@@ -1,5 +1,7 @@
 {
   "name": "llm-bp",
+  "description": "A high-performance CLI tool for batch processing files with custom LLM prompts. Streamline your workflow by applying any prompt to multiple files concurrently.",
+  "version": "1.0.0",
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
