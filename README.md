@@ -5,10 +5,22 @@ A CLI tool for batch processing files using LLM prompts. Built with TypeScript a
 ## Setup
 
 1. Configure environment:
+   ```bash
+   # Copy example config
+   cp .env.example .env
+   
+   # Edit .env with your settings
+   vim .env
    ```
+
+   Environment variables:
+   ```bash
+   # OpenAI API Configuration
    OPENAI_API_KEY=your-api-key-here
    OPENAI_BASE_URL=https://api.openai.com/v1
    OPENAI_MODEL=gpt-3.5-turbo
+
+   # Processing Configuration
    MAX_CONCURRENT_REQUESTS=3
    MAX_RETRIES=3
    ```
@@ -65,6 +77,35 @@ lmb -i "input/*.txt" -o output-dir -f prompt.txt
 4. **Check Results**
    - Results will be saved in the output directory
    - Each input file will have a corresponding output file
+
+### Example Use Cases
+
+1. **Code Review**
+   ```bash
+   # Create prompt file
+   echo "Please review this code:
+   1. Identify potential bugs
+   2. Suggest performance improvements
+   3. Check for security issues" > prompts/code-review.txt
+
+   # Process TypeScript files
+   lmb -i "src/**/*.ts" -o code-reviews -f prompts/code-review.txt
+   ```
+
+2. **Translation**
+   ```bash
+   # Translate markdown docs to Chinese
+   lmb -i "docs/*.md" -o translated-zh -p "Translate this markdown document to Chinese. Keep the markdown formatting intact."
+   ```
+
+3. **Text Processing**
+   ```bash
+   # Summarize articles
+   lmb -i "articles/*.txt" -o summaries -p "Provide a concise summary of this article in 3 paragraphs."
+
+   # Extract key points
+   lmb -i "meeting-notes/*.txt" -o key-points -p "Extract the key action items and decisions from these meeting notes."
+   ```
 
 Options:
 ```
