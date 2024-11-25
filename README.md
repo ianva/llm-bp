@@ -4,12 +4,7 @@ A CLI tool for batch processing files using LLM prompts. Built with TypeScript a
 
 ## Installation
 
-### Option 1: Install from npm
-```bash
-npm install -g llm-bp
-```
-
-### Option 2: Build from Source
+### Build from Source
 1. Clone the repository:
    ```bash
    git clone https://github.com/ianva/llm-bp.git
