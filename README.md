@@ -2,6 +2,48 @@
 
 A CLI tool for batch processing files using LLM prompts. Built with TypeScript and OpenAI's API.
 
+## Installation
+
+### Option 1: Install from npm
+```bash
+npm install -g llm-bp
+```
+
+### Option 2: Build from Source
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/ianva/llm-bp.git
+   cd llm-bp
+   ```
+
+2. Install dependencies and build:
+   ```bash
+   bun install
+   bun run build
+   ```
+
+3. Make `lmb` globally available:
+
+   **For Bash:**
+   ```bash
+   # Add to ~/.bashrc
+   echo 'export PATH="$PATH:$(pwd)/dist"' >> ~/.bashrc
+   source ~/.bashrc
+   ```
+
+   **For Zsh:**
+   ```bash
+   # Add to ~/.zshrc
+   echo 'export PATH="$PATH:$(pwd)/dist"' >> ~/.zshrc
+   source ~/.zshrc
+   ```
+
+   **Alternative: Create symlink**
+   ```bash
+   # Create symlink in /usr/local/bin
+   sudo ln -s "$(pwd)/dist/lmb" /usr/local/bin/lmb
+   ```
+
 ## Setup
 
 1. Configure environment:
@@ -23,12 +65,6 @@ A CLI tool for batch processing files using LLM prompts. Built with TypeScript a
    # Processing Configuration
    MAX_CONCURRENT_REQUESTS=3
    MAX_RETRIES=3
-   ```
-
-2. Install:
-   ```bash
-   bun install
-   bun run build
    ```
 
 ## Usage
