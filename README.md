@@ -1,22 +1,10 @@
 # LLM Batch Processor (llm-bp)
 
-A high-performance CLI tool that enables batch processing of files with any custom LLM prompt. Built with TypeScript and powered by OpenAI's API, llm-bp makes it easy to apply your prompts to multiple files concurrently.
+A CLI tool for batch processing files using LLM prompts. Built with TypeScript and OpenAI's API.
 
-## Key Features
+## Setup
 
-- **Flexible Prompt System**: Use any prompt you want - from inline commands to prompt files
-- **Batch Processing**: Process multiple files at once using glob patterns
-- **Concurrent Execution**: Configure parallel processing to optimize throughput
-- **Smart Progress Tracking**: Monitor processing with content previews
-- **Resilient Processing**: Automatic retries for failed requests
-- **Easy Configuration**: Simple environment-based setup
-
-## Installation
-
-### Option 1: Build from Source
-
-1. Clone the repository
-2. Copy `.env.example` to `.env` and configure your settings:
+1. Configure environment:
    ```
    OPENAI_API_KEY=your-api-key-here
    OPENAI_BASE_URL=https://api.openai.com/v1
@@ -24,117 +12,69 @@ A high-performance CLI tool that enables batch processing of files with any cust
    MAX_CONCURRENT_REQUESTS=3
    MAX_RETRIES=3
    ```
-3. Install dependencies:
+
+2. Install:
    ```bash
    bun install
-   ```
-4. Build the CLI:
-   ```bash
    bun run build
    ```
-   This will create a standalone executable `lmb` in the `dist` directory.
-
-5. Make the CLI globally available:
-   ```bash
-   # Add to your PATH (add this to your .bashrc or .zshrc)
-   export PATH="$PATH:/path/to/llm-batching/dist"
-   
-   # Or create a symlink
-   ln -s /path/to/llm-batching/dist/lmb /usr/local/bin/lmb
-   ```
-
-### Option 2: Direct Download
-
-Download the pre-built binary from the releases page and add it to your PATH.
 
 ## Usage
 
-The `lmb` command provides a simple interface for processing files with LLM:
-
 ### Basic Commands
-
-Process a single file:
 ```bash
-lmb -i input.txt -o output-dir -p "Your prompt here"
+# Single file
+lmb -i input.txt -o output-dir -p "Your prompt"
+
+# Multiple files
+lmb -i "input/*.txt" -o output-dir -p "Your prompt"
+
+# Using prompt file
+lmb -i "input/*.txt" -o output-dir -f prompt.txt
 ```
 
-Process multiple files:
-```bash
-lmb -i "input/*.txt" -o output-dir -p "Your prompt here"
-```
+### How to Use
 
-Use a prompt file:
-```bash
-lmb -i "input/*.txt" -o output-dir -f prompts/translate.txt
-```
+1. **Prepare Your Files**
+   - Put your input files in a directory
+   - Files can be text, markdown, or code files
 
-### Example Use Cases
+2. **Create Your Prompt**
+   - Option 1: Direct prompt using `-p`
+     ```bash
+     lmb -i "*.md" -o output -p "Translate this to Chinese"
+     ```
+   - Option 2: Prompt file using `-f`
+     ```bash
+     # prompt.txt
+     Please analyze this code and:
+     1. List potential bugs
+     2. Suggest improvements
+     ```
 
-1. Translate files to Chinese:
-```bash
-lmb -i "docs/*.md" -o translated -f prompts/translate.txt
-```
+3. **Process Files**
+   - Process single file:
+     ```bash
+     lmb -i src/main.ts -o reviews -p "Review this code"
+     ```
+   - Process multiple files:
+     ```bash
+     lmb -i "src/**/*.ts" -o reviews -f code-review.txt
+     ```
 
-2. Review code files:
-```bash
-lmb -i "src/*.js" -o reviews -f prompts/code_review.txt
-```
-
-3. Summarize articles:
-```bash
-lmb -i "articles/*.txt" -o summaries -f prompts/summarize.txt
-```
-
-### Command Options
-
-```
-Usage: lmb [options]
+4. **Check Results**
+   - Results will be saved in the output directory
+   - Each input file will have a corresponding output file
 
 Options:
-  -i, --input <path>       Input file or directory path (required)
-  -o, --output <path>      Output directory path (required)
-  -p, --prompt <text>      Prompt text to use for processing files
-  -f, --prompt-file <path> Path to file containing the prompt
-  -c, --concurrency <num>  Maximum concurrent requests (default: 3)
-  -r, --retries <num>      Maximum retry attempts (default: 3)
-  -h, --help              Display help information
 ```
-
-Note: Either `--prompt` or `--prompt-file` must be provided.
-
-### Environment Configuration
-
-The CLI can be configured using environment variables:
-
-```bash
-# Create a .env file in your working directory
-OPENAI_API_KEY=your-api-key-here
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-3.5-turbo
-MAX_CONCURRENT_REQUESTS=3
-MAX_RETRIES=3
+-i, --input <path>       Input file/directory path
+-o, --output <path>      Output directory path
+-p, --prompt <text>      Prompt text
+-f, --prompt-file <path> Path to prompt file
+-c, --concurrency <num>  Max concurrent requests (default: 3)
+-r, --retries <num>      Max retry attempts (default: 3)
 ```
-
-### Output Format
-
-The tool provides concise progress information:
-```
-🚀 Processing 3 files with concurrency 5
-
-🔄 Processing: input/article1.txt
-📄 Content preview: The Impact of Artificial Intelligence on Modern So ...
-✨ Result preview: 人工智能对现代社会的影响 ...
-✅ Saved to: output/article1.txt
-
-📊 Final Results:
-✅ Successfully processed: 3/3 files
-```
-
-### Error Handling
-
-- Automatically retries failed requests
-- Configurable retry count via environment variable or command line
-- Detailed error reporting for failed files
 
 ## License
 
