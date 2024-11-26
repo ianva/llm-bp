@@ -83,7 +83,7 @@ program
   .argument('[output]', 'Output directory (optional, prints to stdout if not specified)')
   .option('-p, --prompt <string>', 'Prompt string')
   .option('-f, --prompt-file <file>', 'Prompt file')
-  .parse(process.argv);
+  .parse();
 
 const options = program.opts();
 const [input, outputDir] = program.args;
