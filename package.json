@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "module": "index.ts",
   "type": "module",
+  "bin": {
+    "llm-processor": "./cli.js",
+    "lmb": "./dist/index.js"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -20,10 +24,8 @@
   },
   "scripts": {
     "start": "bun run src/index.ts",
-    "build": "bun build ./src/index.ts --compile --outfile ./dist/lmb",
-    "build:dev": "bun build ./src/index.ts --outfile cli.js --target node"
-  },
-  "bin": {
-    "llm-processor": "./cli.js"
+    "build": "bun build ./src/index.ts --outdir ./dist --target node",
+    "build:dev": "bun build ./src/index.ts --outfile cli.js --target node",
+    "postbuild": "chmod +x ./dist/index.js"
   }
 }

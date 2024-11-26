@@ -2,151 +2,139 @@
 
 A CLI tool for batch processing files using LLM prompts. Built with TypeScript and OpenAI's API.
 
+## Features
+
+- 🚀 Process text using OpenAI's GPT models
+- 📝 Support both file input and pipeline input
+- 🔄 Flexible output options (file or stdout)
+- 📋 Use prompt strings or prompt files
+- 🌐 Configurable OpenAI API settings
+
 ## Installation
 
-### Build from Source
-1. Clone the repository:
+1. Clone and install dependencies:
    ```bash
    git clone https://github.com/ianva/llm-bp.git
    cd llm-bp
+   bun install
    ```
 
-2. Install dependencies and build:
+2. Build the project:
    ```bash
-   bun install
    bun run build
    ```
 
-3. Make `lmb` globally available:
-
-   **For Bash:**
+3. Make `lmb` available:
    ```bash
-   # Add to ~/.bashrc
-   echo 'export PATH="$PATH:$(pwd)/dist"' >> ~/.bashrc
-   source ~/.bashrc
-   ```
-
-   **For Zsh:**
-   ```bash
-   # Add to ~/.zshrc
-   echo 'export PATH="$PATH:$(pwd)/dist"' >> ~/.zshrc
-   source ~/.zshrc
-   ```
-
-   **Alternative: Create symlink**
-   ```bash
-   # Create symlink in /usr/local/bin
-   sudo ln -s "$(pwd)/dist/lmb" /usr/local/bin/lmb
-   ```
-
-## Setup
-
-1. Configure environment:
-   ```bash
-   # Copy example config
-   cp .env.example .env
+   # Create user bin directory if it doesn't exist
+   mkdir -p ~/bin
    
-   # Edit .env with your settings
-   vim .env
+   # Create symlink
+   ln -s "$(pwd)/dist/index.js" ~/bin/lmb
+   
+   # Add to PATH (add to your ~/.zshrc or ~/.bashrc)
+   export PATH="$HOME/bin:$PATH"
    ```
 
-   Environment variables:
+## Configuration
+
+1. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` with your settings:
    ```bash
    # OpenAI API Configuration
    OPENAI_API_KEY=your-api-key-here
    OPENAI_BASE_URL=https://api.openai.com/v1
-   OPENAI_MODEL=gpt-3.5-turbo
-
-   # Processing Configuration
-   MAX_CONCURRENT_REQUESTS=3
-   MAX_RETRIES=3
+   OPENAI_MODEL=gpt-4  # or another available model
    ```
 
 ## Usage
 
-### Basic Commands
+### Basic Usage
+
+1. Process file and print to stdout:
+   ```bash
+   # Using prompt string
+   lmb input.txt -p "Summarize this text"
+   
+   # Using prompt file
+   lmb input.txt -f prompts/summarize.txt
+   ```
+
+2. Process file and save to directory:
+   ```bash
+   # Using prompt string
+   lmb input.txt ./output -p "Summarize this text"
+   
+   # Using prompt file
+   lmb input.txt ./output -f prompts/summarize.txt
+   ```
+
+### Pipeline Usage
+
+1. Process pipeline input and print to stdout:
+   ```bash
+   # Using prompt string
+   echo "Hello, world" | lmb -p "Translate to Chinese"
+   
+   # Using prompt file
+   echo "Hello, world" | lmb -f prompts/translate_to_chinese.txt
+   ```
+
+2. Process pipeline input and save to file:
+   ```bash
+   # Using prompt string
+   echo "Hello, world" | lmb "" ./output -p "Translate to Chinese"
+   
+   # Using prompt file
+   echo "Hello, world" | lmb "" ./output -f prompts/translate_to_chinese.txt
+   ```
+
+### Command Options
+
 ```bash
-# Single file
-lmb -i input.txt -o output-dir -p "Your prompt"
+Usage: lmb [input] [output] [options]
 
-# Multiple files
-lmb -i "input/*.txt" -o output-dir -p "Your prompt"
-
-# Using prompt file
-lmb -i "input/*.txt" -o output-dir -f prompt.txt
-```
-
-### How to Use
-
-1. **Prepare Your Files**
-   - Put your input files in a directory
-   - Files can be text, markdown, or code files
-
-2. **Create Your Prompt**
-   - Option 1: Direct prompt using `-p`
-     ```bash
-     lmb -i "*.md" -o output -p "Translate this to Chinese"
-     ```
-   - Option 2: Prompt file using `-f`
-     ```bash
-     # prompt.txt
-     Please analyze this code and:
-     1. List potential bugs
-     2. Suggest improvements
-     ```
-
-3. **Process Files**
-   - Process single file:
-     ```bash
-     lmb -i src/main.ts -o reviews -p "Review this code"
-     ```
-   - Process multiple files:
-     ```bash
-     lmb -i "src/**/*.ts" -o reviews -f code-review.txt
-     ```
-
-4. **Check Results**
-   - Results will be saved in the output directory
-   - Each input file will have a corresponding output file
-
-### Example Use Cases
-
-1. **Code Review**
-   ```bash
-   # Create prompt file
-   echo "Please review this code:
-   1. Identify potential bugs
-   2. Suggest performance improvements
-   3. Check for security issues" > prompts/code-review.txt
-
-   # Process TypeScript files
-   lmb -i "src/**/*.ts" -o code-reviews -f prompts/code-review.txt
-   ```
-
-2. **Translation**
-   ```bash
-   # Translate markdown docs to Chinese
-   lmb -i "docs/*.md" -o translated-zh -p "Translate this markdown document to Chinese. Keep the markdown formatting intact."
-   ```
-
-3. **Text Processing**
-   ```bash
-   # Summarize articles
-   lmb -i "articles/*.txt" -o summaries -p "Provide a concise summary of this article in 3 paragraphs."
-
-   # Extract key points
-   lmb -i "meeting-notes/*.txt" -o key-points -p "Extract the key action items and decisions from these meeting notes."
-   ```
+Arguments:
+  input   Input file (optional for pipeline input)
+  output  Output directory (optional, prints to stdout if not specified)
 
 Options:
+  -p, --prompt <string>  Prompt string
+  -f, --prompt-file <file>  Prompt file
+  -h, --help  Display help
 ```
--i, --input <path>       Input file/directory path
--o, --output <path>      Output directory path
--p, --prompt <text>      Prompt text
--f, --prompt-file <path> Path to prompt file
--c, --concurrency <num>  Max concurrent requests (default: 3)
--r, --retries <num>      Max retry attempts (default: 3)
-```
+
+## Example Prompt Files
+
+Create prompt files in the `prompts` directory:
+
+1. Translation prompt (`prompts/translate_to_chinese.txt`):
+   ```
+   You are a professional, authentic machine translation engine.
+   Translate the following text to Chinese
+   ```
+
+2. Code review prompt (`prompts/code_review.txt`):
+   ```
+   Review the following code and provide:
+   1. Potential bugs or issues
+   2. Suggestions for improvement
+   3. Best practices that could be applied
+   ```
+
+## Tips
+
+- For consistent results, use a lower temperature setting in your prompts
+- Create reusable prompt files for common tasks
+- Use stdout for quick tasks and file output for batch processing
+- Pipe output to other commands for further processing:
+  ```bash
+  echo "Hello" | lmb -p "Translate to Chinese" | pbcopy  # Copy to clipboard
+  ```
 
 ## License
 

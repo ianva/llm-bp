@@ -1,4 +1,15 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
+
+// Suppress the punycode deprecation warning
+process.removeAllListeners('warning');
+process.on('warning', (warning) => {
+  if (warning.name === 'DeprecationWarning' && 
+      warning.message.includes('punycode')) {
+    return;
+  }
+  console.warn(warning);
+});
+
 import { program } from 'commander';
 import { config } from 'dotenv';
 import OpenAI from 'openai';
@@ -17,11 +28,12 @@ const openai = new OpenAI({
 });
 
 async function processFile(
-  filePath: string,
-  outputDir: string,
+  input: string,
+  outputPath: string | null,
   prompt: string,
+  isContent: boolean = false
 ): Promise<void> {
-  const content = await readFile(filePath, 'utf-8');
+  const content = isContent ? input.trim() : await readFile(input, 'utf-8');
   
   const messages: ChatCompletionMessageParam[] = [
     {
@@ -30,16 +42,19 @@ async function processFile(
     },
     {
       role: 'user',
-      content: `Input:\n\n ${content}`,
+      content: content,
     },
   ];
 
-  console.log('\n🔄 Processing:', filePath);
-  console.log('📄 Content preview:', content.slice(0, 50).replace(/\n/g, ' '), '...');
+  if (!isContent) {
+    console.log('\n🔄 Processing:', input);
+    console.log('📄 Content preview:', content.slice(0, 50).replace(/\n/g, ' '), '...');
+  }
   
   const completion = await openai.chat.completions.create({
-    model: process.env.OPENAI_MODEL || 'gpt-4-mini',
+    model: process.env.OPENAI_MODEL || 'gpt-4',
     messages,
+    temperature: 0.2, // Lower temperature for more consistent translations
   });
 
   const processedContent = completion.choices[0]?.message?.content;
@@ -47,127 +62,64 @@ async function processFile(
     throw new Error('No response from OpenAI');
   }
 
-  console.log('✨ Result preview:', processedContent.slice(0, 50).replace(/\n/g, ' '), '...');
+  // If no output directory specified, print to stdout
+  if (!outputPath) {
+    console.log('\n' + processedContent);
+    return;
+  }
 
-  const outputPath = join(outputDir, basename(filePath));
-  await mkdir(dirname(outputPath), { recursive: true });
-  await writeFile(outputPath, processedContent);
-  
-  console.log(`✅ Saved to: ${outputPath}\n`);
+  // Otherwise save to file
+  console.log('✨ Result preview:', processedContent.slice(0, 50).replace(/\n/g, ' '), '...');
+  const outputFile = isContent ? outputPath : join(outputPath, basename(input));
+  await mkdir(dirname(outputFile), { recursive: true });
+  await writeFile(outputFile, processedContent);
+  console.log('💾 Saved to:', outputFile);
 }
+
+program
+  .name('lmb')
+  .description('Process text using LLM')
+  .argument('[input]', 'Input file (optional for pipeline input)')
+  .argument('[output]', 'Output directory (optional, prints to stdout if not specified)')
+  .option('-p, --prompt <string>', 'Prompt string')
+  .option('-f, --prompt-file <file>', 'Prompt file')
+  .parse(process.argv);
+
+const options = program.opts();
+const [input, outputDir] = program.args;
 
 async function main() {
-  program
-    .name('llm-file-processor')
-    .description('Process files using OpenAI API with configurable concurrency')
-    .requiredOption('-i, --input <path>', 'Input file or directory path')
-    .requiredOption('-o, --output <path>', 'Output directory path')
-    .option('-p, --prompt <text>', 'Prompt text to use for processing files')
-    .option('-f, --prompt-file <path>', 'Path to file containing the prompt')
-    .option(
-      '-c, --concurrency <number>',
-      'Maximum number of concurrent requests',
-      process.env.MAX_CONCURRENT_REQUESTS || '5'
-    )
-    .option(
-      '-r, --retries <number>',
-      'Maximum number of retries per file',
-      process.env.MAX_RETRIES || '3'
-    )
-    .parse();
-
-  const options = program.opts();
-
-  // Initialize queue with concurrency limit
-  const queue = new PQueue({
-    concurrency: parseInt(options.concurrency),
-    autoStart: true,
-  });
-
-  // Get prompt from either text or file
-  let prompt: string;
-  if (options.promptFile) {
-    try {
-      prompt = await readFile(options.promptFile, 'utf-8');
-    } catch (error) {
-      console.error('Error reading prompt file:', error);
-      process.exit(1);
-    }
-  } else if (options.prompt) {
-    prompt = options.prompt;
-  } else {
-    console.error('Either --prompt or --prompt-file must be provided');
-    process.exit(1);
-  }
-
-  // Create a task wrapper with retry logic
-  const createRetryableTask = (task: () => Promise<void>, filePath: string) => {
-    let attempts = 0;
-    const maxRetries = parseInt(options.retries);
-
-    const retryableTask = async (): Promise<void> => {
-      try {
-        return await task();
-      } catch (error) {
-        attempts++;
-        if (attempts <= maxRetries) {
-          const delay = Math.min(1000 * 2 ** (attempts - 1), 10000);
-          console.log(
-            `⚠️ Attempt ${attempts} failed for ${filePath}. Retrying in ${delay}ms... (${maxRetries - attempts + 1} retries left)`
-          );
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return retryableTask();
-        }
-        console.error(`❌ Failed to process ${filePath} after ${maxRetries} attempts`);
-        throw error;
-      }
-    };
-
-    return retryableTask;
-  };
-
   try {
-    // Create output directory if it doesn't exist
-    await mkdir(options.output, { recursive: true });
-
-    // Get all input files
-    const files = await glob(options.input, { nodir: true });
-    
-    if (files.length === 0) {
-      console.error('No input files found');
-      process.exit(1);
+    // Get prompt from either string or file
+    let prompt = options.prompt;
+    if (options.promptFile) {
+      prompt = await readFile(options.promptFile, 'utf-8');
+    }
+    if (!prompt) {
+      throw new Error('Please provide either --prompt or --prompt-file');
     }
 
-    console.log(`🚀 Processing ${files.length} files with concurrency ${options.concurrency}`);
-
-    // Add all files to the queue with retry logic
-    const tasks = files.map(file => ({
-      file,
-      task: createRetryableTask(
-        async () => processFile(file, options.output, prompt),
-        file
-      )
-    }));
-
-    // Process all files and collect results
-    const results = await Promise.allSettled(
-      tasks.map(({ task }) => queue.add(task))
-    );
-
-    // Generate final report
-    const successCount = results.filter(result => result.status === 'fulfilled').length;
-    const failedCount = results.filter(result => result.status === 'rejected').length;
-
-    console.log('\n📊 Final Results:');
-    console.log(`✅ Successfully processed: ${successCount}/${files.length} files`);
-    if (failedCount > 0) {
-      console.error(`❌ Failed to process: ${failedCount} files`);
+    // Handle pipeline input
+    if (!input && !process.stdin.isTTY) {
+      let content = '';
+      process.stdin.setEncoding('utf-8');
+      for await (const chunk of process.stdin) {
+        content += chunk;
+      }
+      const outputPath = outputDir ? join(outputDir, 'output.txt') : null;
+      await processFile(content, outputPath, prompt, true);
+    } 
+    // Handle file input
+    else if (input) {
+      await processFile(input, outputDir, prompt, false);
     }
-
+    else {
+      throw new Error('Please provide an input file or pipe input');
+    }
   } catch (error) {
-    console.error('Fatal error:', error);
+    console.error('❌ Error:', error.message);
     process.exit(1);
   }
 }
 
-await main();
+main();
